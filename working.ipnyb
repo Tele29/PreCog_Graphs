@@ -1,0 +1,62 @@
+import csv
+import networkx as nx
+import matplotlib.pyplot as plt
+from concurrent.futures import ProcessPoolExecutor
+import numpy as np
+from cdlib import algorithms
+import igraph as ig
+from netgraph import Graph
+# Function to read node data from CSV file
+def draw_communities(graph, communities):
+    pos = nx.spring_layout(graph)  # You can use other layouts as well
+    
+    # Draw nodes and edges
+    nx.draw(graph, pos, with_labels=True, node_color='lightgray', edge_color='gray', font_size=8, node_size=300)
+    
+    # Iterate over communities
+    for idx, community in enumerate(communities):
+        nx.draw_networkx_nodes(graph, pos, nodelist=community, node_color=plt.cm.tab10.colors[idx], node_size=300)
+    
+    # Show the plot
+    plt.title("Graph with Communities")
+    plt.show()
+def read_nodes(filename):
+    nodes = {}
+    with open(filename, 'r') as file:
+        reader = csv.reader(file)
+        for row in reader:
+            nodes[int(row[0])] = int(row[1])
+    return nodes
+
+# Function to read edge data from CSV file
+def read_edges(filename):
+    edges = []
+    with open(filename, 'r') as file:
+        reader = csv.reader(file)
+        for row in reader:
+            source, target, timestep = map(int, row)
+            edges.append((source, target, timestep))
+    return edges
+
+# Function to create a graph for a specific time step
+def create_graph(timestep, nodes, edges):
+    G = nx.DiGraph()
+    for node, value in nodes.items():
+        if value <= timestep:  # Add nodes based on the timestep
+            G.add_node(node, value=value)
+    for edge in edges:
+        if edge[2] <= timestep:
+            G.add_edge(edge[0], edge[1])
+    # giant_component_size = len(max(nx.weakly_connected_components(G), key=len))
+    return G
+
+
+
+if __name__ == '__main__':
+    # Read node and edge data
+    nodes = read_nodes('final_nodes_time.csv')
+    edges = read_edges('final_edges_time.csv')
+    # clustering_coefficients = []
+    time_T = int(input("Enter the time step:(1,121) "))
+    G = create_graph(time_T, nodes, edges)
+    
